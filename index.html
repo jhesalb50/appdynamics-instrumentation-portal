@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppDynamics Agent Generator & Download Portal</title>
+    <style>
+        :root { --bg: #f7f8fa; --card: #ffffff; --text: #0f172a; --muted: #525f75; --border: #e2e8f0; --accent: #4f46e5; --accent-dark: #4338ca; --warning-bg: #fffbeb; --warning-text: #b45309; --warning-border: #fef3c7; --success-bg: #f0fdf4; --success-text: #166534; --success-border: #dcfce7; --code-bg: #f8fafc; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+        header { background-color: var(--card); border-bottom: 1px solid var(--border); padding: 2rem 1rem; text-align: center; margin-bottom: 2rem; }
+        header h1 { font-size: 2.5rem; margin: 0 0 0.5rem 0; }
+        header p { font-size: 1.1rem; color: var(--muted); margin: 0; }
+        .section-title { font-size: 1.75rem; font-weight: 600; margin-top: 3rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+        .card-link { display: block; text-decoration: none; color: inherit; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.04); }
+        .card-link:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.07); }
+        .card-link h3 { margin: 0 0 0.5rem 0; font-size: 1.25rem; color: var(--accent); }
+        .card-link p { margin: 0; font-size: 0.95rem; color: var(--muted); }
+        .download-section { background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; margin-bottom: 1.5rem; }
+        .info-box { background-color: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .warning-box { background-color: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        pre { background-color: var(--code-bg); padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; white-space: pre-wrap; word-break: break-all; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+        footer { text-align: center; margin-top: 4rem; padding: 2rem 1rem; font-size: 0.9rem; color: var(--muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <header><h1>AppDynamics Agent Generator & Download Portal</h1><p>A central hub for generating agent configurations and downloading required files.</p></header>
+    <main class="container">
+        <h2 class="section-title">Agent Configuration Generators</h2>
+        <div class="grid">
+            <a href="java-generator.html" class="card-link"><h3>Java Agent</h3><p>Generate `controller-info.xml` or startup parameters.</p></a>
+            <a href="nodejs-generator.html" class="card-link"><h3>Node.js Agent</h3><p>Generate `require` files or environment variables.</p></a>
+            <a href="dotnet-generator.html" class="card-link"><h3>.NET Agent (Linux)</h3><p>Generate a `Dockerfile` or a Kubernetes manifest.</p></a>
+            <a href="machine-agent-generator.html" class="card-link"><h3>Machine Agent</h3><p>Create service configurations for Linux, Windows, and Docker.</p></a>
+            <a href="web-python-generator.html" class="card-link"><h3>Apache & Python</h3><p>A combined generator for Apache Web Server and the Python Agent.</p></a>
+        </div>
+        <h2 class="section-title">Agent Downloads</h2>
+        <div class="download-section">
+            <div class="info-box"><strong>Your Environment Uses Okta OAuth2 Authentication</strong><br>Your AppDynamics SaaS environment is integrated with Okta. You must obtain a JWT token with the 'download' scope from your Okta identity provider to download agents.</div>
+            <h3>How to Download Agents</h3>
+            <ol>
+                <li>Log into your AppDynamics Controller UI</li>
+                <li>Navigate to the <strong>Download Agent</strong> wizard for the agent you need</li>
+                <li>Select the <strong>cURL</strong> download method</li>
+                <li>Copy the generated command (it will include a valid JWT token)</li>
+                <li>Run the command in your terminal</li>
+            </ol>
+            <div class="warning-box"><strong>Security Note:</strong> The generated token is valid for a limited time (typically 1 hour). Do not share it or hardcode it into scripts.</div>
+            <h3>Example Command Template</h3>
+            <pre>curl -L -O -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" "https://download.appdynamics.com/download/prox/download-file/AGENT_TYPE/VERSION/FILENAME"</pre>
+            <h3>Common Agent Paths</h3>
+            <ul>
+                <li><strong>Java Agent (RPM):</strong> <code>java-jdk8-rpm/25.7.0.37201/AppServerAgent-1.8-25.7.0.37201.rpm</code></li>
+                <li><strong>Java Agent (ZIP):</strong> <code>java-agent/latest</code></li>
+                <li><strong>Machine Agent (Linux):</strong> <code>machine-agent-bundle-64bit-linux/latest</code></li>
+                <li><strong>.NET Agent:</strong> <code>dotnet/current/appdynamics-dotnet-core-ga.zip?license=YOUR_LICENSE_KEY</code></li>
+            </ul>
+        </div>
+    </main>
+    <footer><p>Hosted on GitHub Pages | This portal is a self-contained tool. All functionality runs offline in your browser.</p></footer>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
