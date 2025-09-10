@@ -1,0 +1,513 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppDynamics .NET Core Agent Generator (Linux/Kubernetes)</title>
+    <style>
+        :root {
+            --bg: #f7f8fa; --card: #ffffff; --text: #0f172a; --muted: #525f75;
+            --border: #e2e8f0; --accent: #4f46e5; --accent-dark: #4338ca;
+            --code-bg: #f8fafc; --kbd-bg: #f3f4f6; --success: #059669; --danger: #dc2626;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        header { background-color: var(--card); border-bottom: 1px solid var(--border); padding: 1.5rem 1rem; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+        h1 { font-size: 1.75rem; margin: 0 0 0.25rem 0; }
+        .subtitle { color: var(--muted); margin: 0; font-size: 1rem; }
+        main { padding: 1.5rem 0; }
+        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab { padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; color: var(--muted); font-size: 1rem; border-bottom: 3px solid transparent; transform: translateY(1px); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin: 0; }
+        .card-body { padding: 1.5rem; }
+        .grid { display: grid; gap: 1.25rem; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--muted); margin-bottom: 0.5rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background-color: #fff; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        .form-control:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .radio-group label { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer; }
+        .radio-group input[type="radio"] { accent-color: var(--accent); width: 1.2em; height: 1.2em; }
+        .radio-group label.selected { border-color: var(--accent); background-color: #f0f0ff; }
+        .btn { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; background-color: #fff; color: var(--text); }
+        .btn-primary { background-color: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover { background-color: var(--accent-dark); border-color: var(--accent-dark); }
+        .actions { display: flex; gap: 0.5rem; align-items: center; }
+        pre { background-color: var(--code-bg); padding: 1rem; border-radius: 0 0 0.75rem 0.75rem; margin: 0; white-space: pre-wrap; word-break: break-all; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; }
+        .kbd { background-color: var(--kbd-bg); border: 1px solid var(--border); padding: 0.2rem 0.4rem; border-radius: 0.3rem; font-size: 0.8rem; }
+        .note { font-size: 0.9rem; color: var(--muted); padding: 1rem; background-color: var(--bg); border-radius: 0.5rem; margin-top: 1rem; }
+        .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 0.75rem 1.5rem; border-radius: 99px; font-size: 0.9rem; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+        .toast.show { opacity: 1; }
+        h2, h3 { margin-top: 2rem; margin-bottom: 1rem; font-weight: 600; }
+        h3 { font-size: 1.25rem; }
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>AppDynamics .NET Core Agent Generator</h1>
+            <p class="subtitle">For Linux Server (Docker) and Kubernetes deployments.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="generator">Generator</button>
+            <button class="tab" data-tab="guide">Guide</button>
+            <button class="tab" data-tab="references">References</button>
+        </div>
+
+        <!-- Generator Panel -->
+        <div id="panel-generator" class="panel active">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title" style="margin:0;">Configuration</h2></div>
+                <div class="card-body">
+                    <form id="generator-form">
+                        <h3>1. Select Deployment Mode</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group radio-group">
+                                <label for="mode-docker"><input type="radio" id="mode-docker" name="mode" value="docker" checked>Linux Server / Docker</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label for="mode-k8s"><input type="radio" id="mode-k8s" name="mode" value="kubernetes">Kubernetes</label>
+                            </div>
+                        </div>
+
+                        <h3>2. AppDynamics Controller & Application</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group">
+                                <label for="controllerHost">Controller Host</label>
+                                <input type="text" id="controllerHost" class="form-control" placeholder="my-controller.saas.appdynamics.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="controllerPort">Controller Port</label>
+                                <input type="number" id="controllerPort" class="form-control" value="443">
+                            </div>
+                             <div class="form-group">
+                                <label for="accountName">Account Name</label>
+                                <input type="text" id="accountName" class="form-control" placeholder="customer1">
+                            </div>
+                            <div class="form-group">
+                                <label for="accessKey">Access Key</label>
+                                <input type="password" id="accessKey" class="form-control" placeholder="••••••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="appName">Application Name</label>
+                                <input type="text" id="appName" class="form-control" placeholder="My-WebApp">
+                            </div>
+                            <div class="form-group">
+                                <label for="tierName">Tier Name</label>
+                                <input type="text" id="tierName" class="form-control" placeholder="Web-API">
+                            </div>
+                        </div>
+
+                        <div id="docker-options-group">
+                             <h3>3. .NET Core App Details (for Dockerfile)</h3>
+                             <div class="grid grid-cols-3">
+                                <div class="form-group">
+                                    <label for="dotnet-version">.NET SDK Version</label>
+                                    <input type="text" id="dotnet-version" class="form-control" placeholder="8.0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="project-path">Project Path</label>
+                                    <input type="text" id="project-path" class="form-control" placeholder="src/MyWebApp/MyWebApp.csproj">
+                                </div>
+                                <div class="form-group">
+                                    <label for="dll-name">Output DLL Name</label>
+                                    <input type="text" id="dll-name" class="form-control" placeholder="MyWebApp.dll">
+                                </div>
+                             </div>
+                        </div>
+                        
+                        <div id="k8s-options-group" class="hidden">
+                            <h3>3. Kubernetes Deployment Details</h3>
+                            <div class="grid grid-cols-3">
+                                <div class="form-group">
+                                    <label for="k8s-deployment-name">Deployment Name</label>
+                                    <input type="text" id="k8s-deployment-name" class="form-control" placeholder="my-webapp">
+                                </div>
+                                <div class="form-group">
+                                    <label for="k8s-image-name">Container Image</label>
+                                    <input type="text" id="k8s-image-name" class="form-control" placeholder="my-registry/my-webapp:1.0.0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="k8s-container-port">Container Port</label>
+                                    <input type="number" id="k8s-container-port" class="form-control" value="8080">
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            <div class="actions" style="margin-bottom: 1.5rem;">
+                <button id="btnGenerate" class="btn btn-primary">Generate Output</button>
+                <button id="btnSample" class="btn">Load Sample Data</button>
+            </div>
+
+            <div id="output-card" class="card hidden">
+                <div class="card-header">
+                    <h3 id="output-title" class="card-title" style="margin:0;">Generated Output</h3>
+                    <div class="actions">
+                        <button class="btn" id="btnCopy">Copy</button>
+                        <button class="btn" id="btnDownload">Download</button>
+                    </div>
+                </div>
+                <pre id="output-content"></pre>
+            </div>
+        </div>
+
+        <!-- Guide Panel -->
+        <div id="panel-guide" class="panel">
+            <div class="card"><div class="card-body">
+                <h2>How to Use This Generator</h2>
+                <p>This tool creates the necessary configuration to instrument a .NET application running on Linux with the AppDynamics agent.</p>
+
+                <h3>Mode 1: Linux Server / Docker</h3>
+                <p>This mode generates a multi-stage `Dockerfile`. This is the recommended approach for building a clean, optimized, and instrumented container image for your .NET application.</p>
+                <ol>
+                    <li>Select the **Linux Server / Docker** mode.</li>
+                    <li>Fill in your Controller, Application, and .NET Core project details.</li>
+                    <li>Click **Generate Output**.</li>
+                    <li>Save the generated content as `Dockerfile` in the root of your source code repository.</li>
+                    <li>The Dockerfile will handle downloading the agent, building your app, and setting all the required environment variables.</li>
+                    <li>Build your Docker image: <code class="kbd">docker build -t your-image-name:tag .</code></li>
+                    <li>Run the container. The agent will activate and report to the Controller.</li>
+                </ol>
+
+                <h3>Mode 2: Kubernetes</h3>
+                <p>This mode generates a standard Kubernetes `Deployment` manifest. It assumes you have an existing Docker image of your .NET application that **already contains the AppDynamics agent files.** You can use the `Dockerfile` from Mode 1 to create this image.</p>
+                 <ol>
+                    <li>First, ensure you have a Docker image that includes your application and the unzipped AppDynamics agent. The agent should be located at `/opt/appdynamics-dotnet-core`. The `Dockerfile` generated in Mode 1 is perfect for this.</li>
+                    <li>Push this image to a container registry accessible by your Kubernetes cluster.</li>
+                    <li>Select the **Kubernetes** mode in the generator.</li>
+                    <li>Fill in your Controller, Application, and Kubernetes deployment details.</li>
+                    <li>Click **Generate Output**.</li>
+                    <li>Save the generated YAML as a file (e.g., `deployment.yaml`).</li>
+                    <li>Apply it to your cluster: <code class="kbd">kubectl apply -f deployment.yaml</code>. The manifest will inject all the necessary environment variables to activate the agent inside the container.</li>
+                </ol>
+            </div></div>
+        </div>
+
+        <!-- References Panel -->
+        <div id="panel-references" class="panel">
+            <div class="card"><div class="card-body">
+                <h2>Key Concepts & Documentation</h2>
+                
+                <h3>.NET Agent Environment Variables</h3>
+                <p>The .NET Agent for Linux relies on a specific set of environment variables to be activated by the .NET runtime. Unlike the Java agent, you don't use a `-javaagent` flag.</p>
+                <ul>
+                    <li><strong>`CORECLR_ENABLE_PROFILING=1`</strong>: Tells the .NET runtime to enable the profiling hooks.</li>
+                    <li><strong>`CORECLR_PROFILER={57D1393C-52A3-4431-84B0-6893289659B1}`</strong>: The unique ID for the AppDynamics profiler.</li>
+                    <li><strong>`CORECLR_PROFILER_PATH=/opt/appdynamics-dotnet-core/libAppDIcsProfiler.so`</strong>: The absolute path to the agent's core library inside the container.</li>
+                </ul>
+                <p>In addition to these runtime variables, the agent is configured using `APPDYNAMICS_*` variables, which are consistent with other agents (e.g., `APPDYNAMICS_CONTROLLER_HOST_NAME`).</p>
+
+                <h3>Multi-Stage Dockerfile</h3>
+                <p>The generated Dockerfile uses multiple `FROM` statements. This is a best practice for building .NET applications.
+                <br> - The first stage (`sdk`) uses the larger .NET SDK image to build and publish the application.
+                <br> - The second stage (`agent-installer`) downloads and extracts the agent binaries.
+                <br> - The final stage uses the lightweight ASP.NET runtime image, copying in only the published application and the agent files. This results in a much smaller, more secure final image.</p>
+                
+
+                <h3>Official Documentation</h3>
+                <ul>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/net-agent/install-the-net-agent-for-linux" target="_blank" rel="noopener noreferrer">Install the .NET Agent for Linux</a></li>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/net-agent/instrument-net-core-applications-in-linux" target="_blank" rel="noopener noreferrer">Instrument .NET Core on Linux</a></li>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/container-and-orchestration-options/instrument-net-core-applications-in-containers" target="_blank" rel="noopener noreferrer">Instrument .NET Core in Containers</a></li>
+                </ul>
+            </div></div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- DOM Element References ---
+    const getEl = id => document.getElementById(id);
+    const form = getEl('generator-form');
+    const outputCard = getEl('output-card');
+    const outputContent = getEl('output-content');
+    const outputTitle = getEl('output-title');
+    const toast = getEl('toast');
+    
+    // Groups for conditional UI
+    const dockerOptionsGroup = getEl('docker-options-group');
+    const k8sOptionsGroup = getEl('k8s-options-group');
+
+    // --- UI Interaction ---
+    function setupTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        const panels = document.querySelectorAll('.panel');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                getEl(`panel-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+    }
+
+    function setupRadioGroups() {
+        document.querySelectorAll('.radio-group').forEach(group => {
+            const labels = group.querySelectorAll('label');
+            const radios = group.querySelectorAll('input[type="radio"]');
+            function updateSelection() {
+                labels.forEach(label => label.classList.remove('selected'));
+                radios.forEach(radio => {
+                    if (radio.checked) radio.parentElement.classList.add('selected');
+                });
+            }
+            radios.forEach(radio => radio.addEventListener('change', updateSelection));
+            updateSelection(); 
+        });
+    }
+    
+    function updateFormUI() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        dockerOptionsGroup.classList.toggle('hidden', mode !== 'docker');
+        k8sOptionsGroup.classList.toggle('hidden', mode !== 'kubernetes');
+    }
+
+    // --- Button Event Listeners ---
+    getEl('btnGenerate').addEventListener('click', generateOutput);
+    getEl('btnSample').addEventListener('click', loadSampleData);
+    getEl('btnCopy').addEventListener('click', () => copyToClipboard(outputContent.textContent));
+    getEl('btnDownload').addEventListener('click', downloadFile);
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+        radio.addEventListener('change', updateFormUI);
+    });
+    // Also attach to all radio buttons to re-style on any change
+    document.querySelectorAll('input[type="radio"]').forEach(radio => radio.addEventListener('change', setupRadioGroups));
+
+    // --- Core Logic ---
+    function getFormValues() {
+        const values = {};
+        const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="password"]');
+        inputs.forEach(input => values[input.id] = input.value.trim());
+        values.mode = form.querySelector('input[name="mode"]:checked').value;
+        return values;
+    }
+
+    function generateOutput() {
+        const v = getFormValues();
+        let content, title, filename;
+
+        if (v.mode === 'kubernetes') {
+            content = generateK8s(v);
+            title = 'Generated Kubernetes Manifest';
+            filename = 'deployment.yaml';
+        } else { // Docker mode
+            content = generateDockerfile(v);
+            title = 'Generated Multi-Stage Dockerfile';
+            filename = 'Dockerfile';
+        }
+
+        outputContent.textContent = content;
+        outputTitle.textContent = title;
+        outputCard.dataset.filename = filename;
+        outputCard.classList.remove('hidden');
+    }
+    
+    function generateDockerfile(v) {
+        return `
+# This is a multi-stage Dockerfile.
+# It builds the .NET application, downloads the AppDynamics agent,
+# and combines them into a final, minimal runtime image.
+
+# STAGE 1: Build the .NET application
+FROM mcr.microsoft.com/dotnet/sdk:${v['dotnet-version']} AS build
+WORKDIR /src
+COPY ["${v['project-path']}", "${v['project-path'].substring(0, v['project-path'].lastIndexOf('/'))}/"]
+RUN dotnet restore "${v['project-path']}"
+COPY . .
+WORKDIR "/src/${v['project-path'].substring(0, v['project-path'].lastIndexOf('/'))}"
+RUN dotnet build -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish
+
+# STAGE 2: Download and extract the AppDynamics .NET Core Agent for Linux
+FROM debian:stable-slim AS agent-installer
+RUN apt-get update && apt-get install -y wget unzip
+WORKDIR /appd
+RUN wget -O appdynamics-dotnet-core.zip "https://download.appdynamics.com/dotnet/current/appdynamics-dotnet-core-ga.zip"
+RUN unzip appdynamics-dotnet-core.zip -d /opt/appdynamics-dotnet-core
+
+# STAGE 3: Create the final runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:${v['dotnet-version']}
+WORKDIR /app
+COPY --from=publish /app/publish .
+COPY --from=agent-installer /opt/appdynamics-dotnet-core /opt/appdynamics-dotnet-core
+
+# --- AppDynamics Agent Configuration ---
+# These environment variables activate and configure the agent.
+ENV CORECLR_ENABLE_PROFILING=1
+ENV CORECLR_PROFILER={57D1393C-52A3-4431-84B0-6893289659B1}
+ENV CORECLR_PROFILER_PATH=/opt/appdynamics-dotnet-core/libAppDIcsProfiler.so
+ENV APPDYNAMICS_CONTROLLER_HOST_NAME=${v.controllerHost}
+ENV APPDYNAMICS_CONTROLLER_PORT=${v.controllerPort}
+ENV APPDYNAMICS_CONTROLLER_SSL_ENABLED=${v.controllerPort === '443'}
+ENV APPDYNAMICS_AGENT_ACCOUNT_NAME=${v.accountName}
+ENV APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY=${v.accessKey}
+ENV APPDYNAMICS_AGENT_APPLICATION_NAME=${v.appName}
+ENV APPDYNAMICS_AGENT_TIER_NAME=${v.tierName}
+# The agent will automatically generate a unique node name.
+# --- End AppDynamics Configuration ---
+
+# Entry point for the application
+ENTRYPOINT ["dotnet", "${v['dll-name']}"]
+`.trim();
+    }
+
+    function generateK8s(v) {
+        const sslEnabled = v.controllerPort === '443';
+        return `
+# This manifest defines a Kubernetes Deployment for your .NET application.
+# IMPORTANT: It assumes your container image already includes the AppDynamics agent
+# at the path /opt/appdynamics-dotnet-core.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${v['k8s-deployment-name']}
+  labels:
+    app: ${v['k8s-deployment-name']}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${v['k8s-deployment-name']}
+  template:
+    metadata:
+      labels:
+        app: ${v['k8s-deployment-name']}
+    spec:
+      containers:
+      - name: ${v['k8s-deployment-name']}
+        image: ${v['k8s-image-name']}
+        ports:
+        - containerPort: ${parseInt(v['k8s-container-port'], 10)}
+        env:
+        # --- AppDynamics .NET Core Agent Activation ---
+        - name: CORECLR_ENABLE_PROFILING
+          value: "1"
+        - name: CORECLR_PROFILER
+          value: "{57D1393C-52A3-4431-84B0-6893289659B1}"
+        - name: CORECLR_PROFILER_PATH
+          value: "/opt/appdynamics-dotnet-core/libAppDIcsProfiler.so"
+
+        # --- AppDynamics Agent Configuration ---
+        - name: APPDYNAMICS_CONTROLLER_HOST_NAME
+          value: "${v.controllerHost}"
+        - name: APPDYNAMICS_CONTROLLER_PORT
+          value: "${v.controllerPort}"
+        - name: APPDYNAMICS_CONTROLLER_SSL_ENABLED
+          value: "${sslEnabled}"
+        - name: APPDYNAMICS_AGENT_ACCOUNT_NAME
+          value: "${v.accountName}"
+        - name: APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY
+          value: "${v.accessKey}"
+        - name: APPDYNAMICS_AGENT_APPLICATION_NAME
+          value: "${v.appName}"
+        - name: APPDYNAMICS_AGENT_TIER_NAME
+          value: "${v.tierName}"
+        - name: APPDYNAMICS_KUBERNETES_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        # The agent uses the pod name to automatically generate a unique node name
+`.trim();
+    }
+
+    // --- Utility Functions ---
+    function loadSampleData() {
+        const fields = {
+            controllerHost: 'my-controller.saas.appdynamics.com',
+            controllerPort: '443',
+            accountName: 'customer1',
+            accessKey: 'your-account-access-key-here',
+            appName: 'InventoryService',
+            tierName: 'Inventory-API',
+            'dotnet-version': '8.0',
+            'project-path': 'src/InventoryService/InventoryService.csproj',
+            'dll-name': 'InventoryService.dll',
+            'k8s-deployment-name': 'inventory-service',
+            'k8s-image-name': 'my-registry/inventory-service:2.1.0',
+            'k8s-container-port': '8080'
+        };
+        for (const [id, value] of Object.entries(fields)) {
+            const el = getEl(id);
+            if (el) el.value = value;
+        }
+    }
+    
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'), () => showToast('Copy failed!'));
+    }
+
+    function downloadFile() {
+        const content = outputContent.textContent;
+        const filename = outputCard.dataset.filename || 'config.txt';
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+    
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // --- Initial Setup ---
+    setupTabs();
+    setupRadioGroups();
+    updateFormUI();
+});
+</script>
+
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

@@ -1,0 +1,459 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppDynamics Java Agent Generator (Windows/Linux/Tomcat)</title>
+    <style>
+        :root {
+            --bg: #f7f8fa; --card: #ffffff; --text: #0f172a; --muted: #525f75;
+            --border: #e2e8f0; --accent: #4f46e5; --accent-dark: #4338ca;
+            --code-bg: #f8fafc; --kbd-bg: #f3f4f6; --success: #059669; --danger: #dc2626;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        header { background-color: var(--card); border-bottom: 1px solid var(--border); padding: 1.5rem 1rem; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+        h1 { font-size: 1.75rem; margin: 0 0 0.25rem 0; }
+        .subtitle { color: var(--muted); margin: 0; font-size: 1rem; }
+        main { padding: 1.5rem 0; }
+        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab { padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; color: var(--muted); font-size: 1rem; border-bottom: 3px solid transparent; transform: translateY(1px); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin: 0; }
+        .card-body { padding: 1.5rem; }
+        .grid { display: grid; gap: 1.25rem; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--muted); margin-bottom: 0.5rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background-color: #fff; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        .form-control:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .radio-group label { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer; }
+        .radio-group input[type="radio"] { accent-color: var(--accent); width: 1.2em; height: 1.2em; }
+        .radio-group label.selected { border-color: var(--accent); background-color: #f0f0ff; }
+        .btn { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; background-color: #fff; color: var(--text); }
+        .btn-primary { background-color: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover { background-color: var(--accent-dark); border-color: var(--accent-dark); }
+        .actions { display: flex; gap: 0.5rem; align-items: center; }
+        pre { background-color: var(--code-bg); padding: 1rem; border-radius: 0 0 0.75rem 0.75rem; margin: 0; white-space: pre-wrap; word-break: break-all; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; }
+        .kbd { background-color: var(--kbd-bg); border: 1px solid var(--border); padding: 0.2rem 0.4rem; border-radius: 0.3rem; font-size: 0.8rem; }
+        .note { font-size: 0.9rem; color: var(--muted); padding: 1rem; background-color: var(--bg); border-radius: 0.5rem; }
+        .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 0.75rem 1.5rem; border-radius: 99px; font-size: 0.9rem; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+        .toast.show { opacity: 1; }
+        h2, h3 { margin-top: 2rem; margin-bottom: 1rem; font-weight: 600; }
+        h3 { font-size: 1.25rem; }
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>AppDynamics Java Agent Generator</h1>
+            <p class="subtitle">For Windows, Linux, and Apache Tomcat deployments.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="generator">Generator</button>
+            <button class="tab" data-tab="guide">Guide</button>
+            <button class="tab" data-tab="references">References</button>
+        </div>
+
+        <!-- Generator Panel -->
+        <div id="panel-generator" class="panel active">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title" style="margin:0;">Configuration</h2></div>
+                <div class="card-body">
+                    <form id="generator-form">
+                        <h3>1. Select Deployment Target</h3>
+                        <div class="grid grid-cols-3">
+                            <div class="form-group radio-group">
+                                <label for="platform-linux"><input type="radio" id="platform-linux" name="platform" value="linux" checked>Linux</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label for="platform-windows"><input type="radio" id="platform-windows" name="platform" value="windows">Windows</label>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3" style="margin-top: 1rem;">
+                           <div class="form-group radio-group">
+                                <label for="type-standalone"><input type="radio" id="type-standalone" name="deployType" value="standalone" checked>Standalone Java App</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label for="type-tomcat"><input type="radio" id="type-tomcat" name="deployType" value="tomcat">Apache Tomcat</label>
+                            </div>
+                        </div>
+
+                        <h3>2. Select Output Format</h3>
+                         <div class="grid grid-cols-3">
+                           <div class="form-group radio-group">
+                                <label for="output-params"><input type="radio" id="output-params" name="outputFormat" value="params" checked>Startup Parameters</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label for="output-xml"><input type="radio" id="output-xml" name="outputFormat" value="xml">controller-info.xml</label>
+                            </div>
+                        </div>
+
+                        <h3>3. Configure Agent Properties</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group">
+                                <label for="controllerHost">Controller Host</label>
+                                <input type="text" id="controllerHost" class="form-control" placeholder="my-controller.saas.appdynamics.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="controllerPort">Controller Port</label>
+                                <input type="number" id="controllerPort" class="form-control" value="443">
+                            </div>
+                             <div class="form-group">
+                                <label for="accountName">Account Name</label>
+                                <input type="text" id="accountName" class="form-control" placeholder="customer1">
+                            </div>
+                            <div class="form-group">
+                                <label for="accessKey">Access Key</label>
+                                <input type="password" id="accessKey" class="form-control" placeholder="••••••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="appName">Application Name</label>
+                                <input type="text" id="appName" class="form-control" placeholder="My-Java-App">
+                            </div>
+                            <div class="form-group">
+                                <label for="tierName">Tier Name</label>
+                                <input type="text" id="tierName" class="form-control" placeholder="App-Tier-1">
+                            </div>
+                             <div class="form-group">
+                                <label for="nodeName">Node Name</label>
+                                <input type="text" id="nodeName" class="form-control" placeholder="App-Node-1">
+                            </div>
+                            <div id="agent-path-group" class="form-group">
+                                <label for="agentPath">Java Agent Path (Directory)</label>
+                                <input type="text" id="agentPath" class="form-control" placeholder="/opt/appdynamics/java-agent">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="actions" style="margin-bottom: 1.5rem;">
+                <button id="btnGenerate" class="btn btn-primary">Generate Output</button>
+                <button id="btnSample" class="btn">Load Sample Data</button>
+            </div>
+
+            <div id="output-card" class="card hidden">
+                <div class="card-header">
+                    <h3 id="output-title" class="card-title" style="margin:0;">Generated Output</h3>
+                    <div class="actions">
+                        <button class="btn" id="btnCopy">Copy</button>
+                        <button class="btn" id="btnDownload">Download</button>
+                    </div>
+                </div>
+                <pre id="output-content"></pre>
+            </div>
+        </div>
+
+        <!-- Guide Panel -->
+        <div id="panel-guide" class="panel">
+            <div class="card"><div class="card-body">
+                <h2>How to Use This Generator</h2>
+                <p>This tool helps you configure the AppDynamics Java Agent by generating either a `controller-info.xml` file or the necessary startup parameters for your environment.</p>
+
+                <h3>Method 1: Generating Startup Parameters</h3>
+                <p>This is the most direct method. The agent is configured entirely via command-line arguments passed to the JVM.</p>
+                <ol>
+                    <li>Select your **Platform** (Linux/Windows) and **Deployment Type** (Standalone/Tomcat).</li>
+                    <li>Choose the **Startup Parameters** output format.</li>
+                    <li>Fill in all configuration fields, including the **Java Agent Path**, which is the directory where you unzipped the agent.</li>
+                    <li>Click **Generate Output**.</li>
+                    <li>Copy the generated script/parameters and place them in the appropriate file:
+                        <ul>
+                            <li>**Linux Standalone:** Add the `export JAVA_OPTS="..."` line to your application's startup script.</li>
+                            <li>**Linux Tomcat:** Place the `export CATALINA_OPTS="..."` lines into `<TOMCAT_HOME>/bin/setenv.sh`.</li>
+                            <li>**Windows Standalone:** Add the `set JAVA_OPTS=...` command to your startup `.bat` script.</li>
+                            <li>**Windows Tomcat:** Place the `set CATALINA_OPTS=...` lines into `<TOMCAT_HOME>/bin/setenv.bat`.</li>
+                        </ul>
+                    </li>
+                    <li>Restart your application server.</li>
+                </ol>
+
+                <h3>Method 2: Generating `controller-info.xml`</h3>
+                <p>This method separates agent configuration from the application's startup logic. It's often preferred for cleaner management, especially when using automation.</p>
+                 <ol>
+                    <li>Select the **controller-info.xml** output format. The Platform and Deployment Type selectors are ignored, as the XML is platform-agnostic.</li>
+                    <li>Fill in the agent properties. The **Java Agent Path** is not needed for this step.</li>
+                    <li>Click **Generate Output** and save the content as `controller-info.xml`.</li>
+                    <li>Place this file inside the agent's `conf` directory (e.g., `<AGENT_HOME>/ver<VERSION>/conf/controller-info.xml`).</li>
+                    <li>Now, you still need to tell the JVM where to find the agent. You only need to specify the `-javaagent` path.
+                        <ul>
+                            <li>**Linux:** `export JAVA_OPTS="-javaagent:/path/to/javaagent.jar"`</li>
+                            <li>**Windows:** `set JAVA_OPTS="-javaagent:C:\path\to\javaagent.jar"`</li>
+                        </ul>
+                        Add this single environment variable to your startup script or `setenv` file. All other configuration will be read from the XML.
+                    </li>
+                     <li>Restart your application server.</li>
+                </ol>
+            </div></div>
+        </div>
+
+        <!-- References Panel -->
+        <div id="panel-references" class="panel">
+            <div class="card"><div class="card-body">
+                <h2>Key Concepts & Documentation</h2>
+                
+                <h3>Startup Parameters vs. `controller-info.xml`</h3>
+                <p>You can configure the Java agent using either Java system properties (set in `JAVA_OPTS` or `CATALINA_OPTS`) or the `controller-info.xml` file. A property set as a system property (`-D...`) always overrides the equivalent setting in the XML file.</p>
+                <ul>
+                    <li>**Startup Parameters:** Easy for quick tests. Can be managed via environment variables. Sensitive data like the access key is visible in the process list.</li>
+                    <li>**`controller-info.xml`:** Keeps configuration clean and separate from startup scripts. Considered more secure as credentials aren't on the command line. This is the recommended approach for production environments.</li>
+                </ul>
+
+                <h3>`setenv.sh` and `setenv.bat` in Tomcat</h3>
+                <p>Tomcat's startup scripts (`catalina.sh` or `catalina.bat`) are designed to execute `setenv.sh` (on Linux) or `setenv.bat` (on Windows) if they exist in the `<TOMCAT_HOME>/bin/` directory. This is the standard, recommended location to specify environment variables like `CATALINA_OPTS` without modifying the core Tomcat scripts.</p>
+
+                <h3>Official Documentation</h3>
+                <ul>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/java-agent/install-the-java-agent" target="_blank" rel="noopener noreferrer">Install the Java Agent</a></li>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/java-agent/java-agent-configuration-properties" target="_blank" rel="noopener noreferrer">Java Agent Configuration Properties</a></li>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/java-agent/configure-the-java-agent-for-tomcat" target="_blank" rel="noopener noreferrer">Configure the Java Agent for Tomcat</a></li>
+                </ul>
+            </div></div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- DOM Element References ---
+    const getEl = id => document.getElementById(id);
+    const form = getEl('generator-form');
+    const outputCard = getEl('output-card');
+    const outputContent = getEl('output-content');
+    const outputTitle = getEl('output-title');
+    const agentPathGroup = getEl('agent-path-group');
+    const toast = getEl('toast');
+
+    // --- UI Interaction ---
+    function setupTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        const panels = document.querySelectorAll('.panel');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                getEl(`panel-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+    }
+
+    function setupRadioGroups() {
+        const radioGroups = document.querySelectorAll('.radio-group');
+        radioGroups.forEach(group => {
+            const labels = group.querySelectorAll('label');
+            const radios = group.querySelectorAll('input[type="radio"]');
+
+            function updateSelection() {
+                labels.forEach(label => label.classList.remove('selected'));
+                radios.forEach(radio => {
+                    if (radio.checked) {
+                        radio.parentElement.classList.add('selected');
+                    }
+                });
+            }
+            radios.forEach(radio => radio.addEventListener('change', updateSelection));
+            updateSelection(); 
+        });
+    }
+    
+    function toggleAgentPathField() {
+        const outputFormat = document.querySelector('input[name="outputFormat"]:checked').value;
+        agentPathGroup.classList.toggle('hidden', outputFormat === 'xml');
+    }
+
+    // --- Button Event Listeners ---
+    getEl('btnGenerate').addEventListener('click', generateOutput);
+    getEl('btnSample').addEventListener('click', loadSampleData);
+    getEl('btnCopy').addEventListener('click', () => copyToClipboard(outputContent.textContent));
+    getEl('btnDownload').addEventListener('click', downloadFile);
+    document.querySelectorAll('input[name="outputFormat"]').forEach(radio => {
+        radio.addEventListener('change', toggleAgentPathField);
+    });
+
+    // --- Core Logic ---
+    function getFormValues() {
+        const values = {};
+        const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="password"], select');
+        inputs.forEach(input => values[input.id] = input.value.trim());
+        
+        values.platform = form.querySelector('input[name="platform"]:checked').value;
+        values.deployType = form.querySelector('input[name="deployType"]:checked').value;
+        values.outputFormat = form.querySelector('input[name="outputFormat"]:checked').value;
+        
+        return values;
+    }
+
+    function generateOutput() {
+        const v = getFormValues();
+        let content = '';
+        let title = 'Generated Output';
+        let filename = 'config.txt';
+
+        if (v.outputFormat === 'xml') {
+            content = generateXml(v);
+            title = 'Generated controller-info.xml';
+            filename = 'controller-info.xml';
+        } else {
+            content = generateParams(v);
+            title = `Generated Startup Parameters (${v.platform}, ${v.deployType})`;
+            filename = v.platform === 'windows' ? 'setup.bat' : 'setup.sh';
+        }
+
+        outputContent.textContent = content;
+        outputTitle.textContent = title;
+        outputCard.dataset.filename = filename;
+        outputCard.classList.remove('hidden');
+    }
+    
+    function generateXml(v) {
+        return `<!--
+  This is the AppDynamics agent controller-info.xml.
+  Place this file in the 'conf' directory of your Java Agent installation.
+  Example: <agent_home>/ver<VERSION>/conf/controller-info.xml
+-->
+<controller-info>
+    <controller-host>${v.controllerHost}</controller-host>
+    <controller-port>${v.controllerPort}</controller-port>
+    <controller-ssl-enabled>${v.controllerPort === '443' || v.controllerPort === '8181'}</controller-ssl-enabled>
+    
+    <account-name>${v.accountName}</account-name>
+    <account-access-key>${v.accessKey}</account-access-key>
+    
+    <application-name>${v.appName}</application-name>
+    <tier-name>${v.tierName}</tier-name>
+    <node-name>${v.nodeName}</node-name>
+</controller-info>
+`.trim();
+    }
+
+    function generateParams(v) {
+        const isWindows = v.platform === 'windows';
+        const isTomcat = v.deployType === 'tomcat';
+
+        const agentJarPath = isWindows ? `${v.agentPath}\\javaagent.jar` : `${v.agentPath}/javaagent.jar`;
+        const props = [
+            `-javaagent:"${agentJarPath}"`,
+            `-Dappdynamics.controller.hostName=${v.controllerHost}`,
+            `-Dappdynamics.controller.port=${v.controllerPort}`,
+            `-Dappdynamics.controller.ssl.enabled=${v.controllerPort === '443'}`,
+            `-Dappdynamics.agent.accountName=${v.accountName}`,
+            `-Dappdynamics.agent.accountAccessKey=${v.accessKey}`,
+            `-Dappdynamics.agent.applicationName=${v.appName}`,
+            `-Dappdynamics.agent.tierName=${v.tierName}`,
+            `-Dappdynamics.agent.nodeName=${v.nodeName}`
+        ];
+        
+        const lineContinuation = isWindows ? ' ^' : ' \\';
+        const propsString = props.join(lineContinuation + '\n  ');
+
+        if (isTomcat) {
+            const varName = 'CATALINA_OPTS';
+            if (isWindows) {
+                return `rem Add these lines to your <TOMCAT_HOME>/bin/setenv.bat file\n\nset "${varName}=%${varName}% ${props.join(' ')}"`;
+            } else {
+                return `# Add these lines to your <TOMCAT_HOME>/bin/setenv.sh file\n\nexport ${varName}="$${varName} ${props.join(' ')}"`;
+            }
+        } else {
+            const varName = 'JAVA_OPTS';
+            if (isWindows) {
+                return `rem Set this environment variable in your application's startup script\n\nset "${varName}=${propsString}"`;
+            } else {
+                return `# Set this environment variable in your application's startup script\n\nexport ${varName}="${propsString}"`;
+            }
+        }
+    }
+    
+    // --- Utility Functions ---
+    function loadSampleData() {
+        const fields = {
+            controllerHost: 'my-controller.saas.appdynamics.com',
+            controllerPort: '443',
+            accountName: 'customer1',
+            accessKey: 'your-account-access-key-here',
+            appName: 'Online-Store',
+            tierName: 'Store-API',
+            nodeName: 'Store-API-Node1',
+            agentPath: '/opt/appdynamics/java-agent'
+        };
+        for (const [id, value] of Object.entries(fields)) {
+            getEl(id).value = value;
+        }
+        // Update platform-specific path
+        getEl('platform-windows').addEventListener('change', () => getEl('agentPath').value = 'C:\\AppDynamics\\java-agent');
+        getEl('platform-linux').addEventListener('change', () => getEl('agentPath').value = '/opt/appdynamics/java-agent');
+    }
+    
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'), () => showToast('Copy failed!'));
+    }
+
+    function downloadFile() {
+        const content = outputContent.textContent;
+        const filename = outputCard.dataset.filename || 'config.txt';
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+    
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // --- Initial Setup ---
+    setupTabs();
+    setupRadioGroups();
+    toggleAgentPathField();
+    
+    // Also listen to any change in radio buttons to re-style them
+    document.querySelectorAll('input[type="radio"]').forEach(radio => radio.addEventListener('change', setupRadioGroups));
+});
+</script>
+
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

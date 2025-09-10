@@ -1,0 +1,422 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppDynamics Agent Generator (Apache & Python)</title>
+    <style>
+        :root {
+            --bg: #f7f8fa; --card: #ffffff; --text: #0f172a; --muted: #525f75;
+            --border: #e2e8f0; --accent: #4f46e5; --accent-dark: #4338ca;
+            --code-bg: #f8fafc; --kbd-bg: #f3f4f6;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        header { background-color: var(--card); border-bottom: 1px solid var(--border); padding: 1.5rem 1rem; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+        h1 { font-size: 1.75rem; margin: 0 0 0.25rem 0; }
+        .subtitle { color: var(--muted); margin: 0; font-size: 1rem; }
+        main { padding: 1.5rem 0; }
+        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab { padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; color: var(--muted); font-size: 1rem; border-bottom: 3px solid transparent; transform: translateY(1px); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin: 0; }
+        .card-body { padding: 1.5rem; }
+        .grid { display: grid; gap: 1.25rem; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--muted); margin-bottom: 0.5rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        .form-control:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .radio-group label { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer; }
+        .radio-group input[type="radio"] { accent-color: var(--accent); width: 1.2em; height: 1.2em; }
+        .radio-group label.selected { border-color: var(--accent); background-color: #f0f0ff; }
+        .btn { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; color: var(--text); }
+        .btn-primary { background-color: var(--accent); color: #fff; border-color: var(--accent); }
+        .actions { display: flex; gap: 0.5rem; align-items: center; }
+        pre { background-color: var(--code-bg); padding: 1rem; border-radius: 0 0 0.75rem 0.75rem; margin: 0; white-space: pre-wrap; word-break: break-all; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; }
+        .kbd { background-color: var(--kbd-bg); border: 1px solid var(--border); padding: 0.2rem 0.4rem; border-radius: 0.3rem; font-size: 0.8rem; }
+        .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 0.75rem 1.5rem; border-radius: 99px; opacity: 0; transition: opacity 0.3s ease; }
+        .toast.show { opacity: 1; }
+        h2, h3 { margin-top: 2rem; margin-bottom: 1rem; font-weight: 600; }
+        .hidden { display: none; }
+        .output-group { margin-bottom: 1.5rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>AppDynamics Agent Generator</h1>
+            <p class="subtitle">For Apache Web Server and Python.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="generator">Generator</button>
+            <button class="tab" data-tab="guide">Guide</button>
+            <button class="tab" data-tab="references">References</button>
+        </div>
+
+        <div id="panel-generator" class="panel active">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title" style="margin:0;">Configuration</h2></div>
+                <div class="card-body">
+                    <form id="generator-form">
+                        <h3>1. Select Technology</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group radio-group">
+                                <label><input type="radio" name="tech" value="apache" checked>Apache Web Server</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label><input type="radio" name="tech" value="python">Python</label>
+                            </div>
+                        </div>
+
+                        <!-- Common Config -->
+                        <h3>2. Configure Agent Properties</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="controllerHost">Controller Host</label><input type="text" id="controllerHost" class="form-control" placeholder="my-controller.saas.appdynamics.com"></div>
+                            <div class="form-group"><label for="controllerPort">Controller Port</label><input type="number" id="controllerPort" class="form-control" value="443"></div>
+                            <div class="form-group"><label for="accountName">Account Name</label><input type="text" id="accountName" class="form-control" placeholder="customer1"></div>
+                            <div class="form-group"><label for="accessKey">Access Key</label><input type="password" id="accessKey" class="form-control" placeholder="••••••••••••"></div>
+                        </div>
+
+                        <!-- Apache Specific -->
+                        <div id="apache-options">
+                            <h3>3. Apache Specifics</h3>
+                            <div class="grid grid-cols-2">
+                                <div class="form-group"><label for="apache-platform">Server OS</label><select id="apache-platform" class="form-control"><option value="linux">Linux</option><option value="windows">Windows</option></select></div>
+                                <div class="form-group"><label for="apache-agent-dir">Agent Install Directory</label><input type="text" id="apache-agent-dir" class="form-control" placeholder="/opt/appdynamics-php-agent"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Python Specific -->
+                        <div id="python-options" class="hidden">
+                            <h3>3. Python Specifics</h3>
+                            <div class="grid grid-cols-2">
+                                <div class="form-group radio-group"><label><input type="radio" name="python-mode" value="standard" checked>Standard (VM)</label></div>
+                                <div class="form-group radio-group"><label><input type="radio" name="python-mode" value="kubernetes">Kubernetes</label></div>
+                            </div>
+                            <div class="grid grid-cols-3">
+                                <div class="form-group"><label for="py-appName">Application Name</label><input type="text" id="py-appName" class="form-control" placeholder="My-Python-App"></div>
+                                <div class="form-group"><label for="py-tierName">Tier Name</label><input type="text" id="py-tierName" class="form-control" placeholder="Backend-API"></div>
+                                <div class="form-group"><label for="py-nodeName">Node Name</label><input type="text" id="py-nodeName" class="form-control" placeholder="api-node-1"></div>
+                            </div>
+                            <div id="py-k8s-options" class="hidden">
+                                <div class="grid grid-cols-3">
+                                    <div class="form-group"><label for="py-k8s-deployment">Deployment Name</label><input type="text" id="py-k8s-deployment" class="form-control" placeholder="backend-api"></div>
+                                    <div class="form-group"><label for="py-k8s-image">Container Image</label><input type="text" id="py-k8s-image" class="form-control" placeholder="my-python-app:1.2"></div>
+                                    <div class="form-group"><label for="py-k8s-command">App Entrypoint</label><input type="text" id="py-k8s-command" class="form-control" placeholder="gunicorn -b :8080 myapp:app"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="actions" style="margin-bottom: 1.5rem;">
+                <button id="btnGenerate" class="btn btn-primary">Generate Artifacts</button>
+                <button id="btnSample" class="btn">Load Sample Data</button>
+            </div>
+
+            <div id="outputs-container" class="hidden"></div>
+        </div>
+
+        <div id="panel-guide" class="panel"></div>
+        <div id="panel-references" class="panel"></div>
+    </main>
+
+    <div id="toast" class="toast"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Basic Setup ---
+    const getEl = (id) => document.getElementById(id);
+    const form = getEl('generator-form');
+    const outputsContainer = getEl('outputs-container');
+    const toast = getEl('toast');
+    const apacheOptions = getEl('apache-options');
+    const pythonOptions = getEl('python-options');
+    const pyK8sOptions = getEl('py-k8s-options');
+
+    // --- Guide & Reference Content ---
+    const guideContent = {
+        apache: `<h2>Apache Web Server Agent Guide</h2>
+            <ol>
+                <li>Unzip the PHP Agent package, which contains the Apache agent, into your chosen directory (e.g., <code>/opt/appdynamics-php-agent</code>).</li>
+                <li>Generate the artifacts. You will get a <code>mod_appdynamics.conf</code> file and a <code>LoadModule</code> line.</li>
+                <li>Place the <code>mod_appdynamics.conf</code> file in your Apache configuration directory (e.g., <code>/etc/httpd/conf.d/</code>).</li>
+                <li>Add the <code>LoadModule</code> line to your main <code>httpd.conf</code> file, ensuring the path points to the agent module.</li>
+                <li>Restart Apache: <code>sudo systemctl restart httpd</code>. The agent will instrument requests and create a tier named after the virtual host.</li>
+            </ol>`,
+        python: `<h2>Python Agent Guide</h2>
+            <h4>Standard (VM) Mode</h4>
+            <ol>
+                <li>Install the agent: <code>pip install appdynamics</code>.</li>
+                <li>Select "Standard (VM)" mode and generate the artifacts.</li>
+                <li>Source the environment script to set configuration: <code>source ./appd_env.sh</code></li>
+                <li>Launch your application using the generated <code>pyagent run</code> command. This command wraps your application's original startup command.</li>
+            </ol>
+            <h4>Kubernetes Mode</h4>
+            <ol>
+                <li>Ensure your Docker image has the agent installed (<code>pip install appdynamics</code>).</li>
+                <li>Select "Kubernetes" mode and generate the YAML manifest.</li>
+                <li>The manifest injects the configuration as environment variables and modifies the container's command to include <code>pyagent run</code>.</li>
+                <li>Apply to your cluster: <code>kubectl apply -f deployment.yaml</code>.</li>
+            </ol>`
+    };
+
+    const referencesContent = {
+        apache: `<h2>Apache Agent References</h2>
+            <p>The Apache Web Server Agent is part of the PHP Agent package. It captures metrics for server requests, response times, and errors, creating a "Web Server" tier in the Controller.</p>
+            <ul>
+                <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/php-agent/install-the-php-agent-for-apache" target="_blank">Install for Apache</a></li>
+                <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/web-server-agents/web-server-agent-settings" target="_blank">Web Server Agent Settings</a></li>
+            </ul>`,
+        python: `<h2>Python Agent References</h2>
+            <p>The Python agent uses the <code>pyagent</code> wrapper script to initialize instrumentation before your application code runs. Configuration can be supplied via environment variables or a configuration file.</p>
+            <ul>
+                <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/python-agent/install-the-python-agent" target="_blank">Install the Python Agent</a></li>
+                <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/python-agent/python-agent-settings" target="_blank">Python Agent Settings</a></li>
+                <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/container-and-orchestration-options/instrument-a-python-application-in-a-container" target="_blank">Instrument Python in Containers</a></li>
+            </ul>`
+    };
+
+    // --- UI Logic ---
+    function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            getEl(`panel-${tab.dataset.tab}`).classList.add('active');
+        }));
+    }
+
+    function setupRadioGroups() {
+        document.querySelectorAll('.radio-group').forEach(group => {
+            const labels = group.querySelectorAll('label');
+            const radios = group.querySelectorAll('input[type="radio"]');
+            const update = () => {
+                labels.forEach(label => label.classList.remove('selected'));
+                radios.forEach(radio => { if (radio.checked) radio.parentElement.classList.add('selected'); });
+            };
+            radios.forEach(radio => radio.addEventListener('change', update));
+            update();
+        });
+    }
+
+    function updateFormUI() {
+        const tech = form.querySelector('input[name="tech"]:checked').value;
+        const isApache = tech === 'apache';
+        apacheOptions.classList.toggle('hidden', !isApache);
+        pythonOptions.classList.toggle('hidden', isApache);
+        
+        if (!isApache) {
+            const pyMode = form.querySelector('input[name="python-mode"]:checked').value;
+            pyK8sOptions.classList.toggle('hidden', pyMode !== 'kubernetes');
+        }
+        
+        getEl('panel-guide').innerHTML = `<div class="card"><div class="card-body">${guideContent[tech]}</div></div>`;
+        getEl('panel-references').innerHTML = `<div class="card"><div class="card-body">${referencesContent[tech]}</div></div>`;
+
+        // Update Apache agent dir placeholder
+        const apachePlatform = getEl('apache-platform').value;
+        const apacheAgentDir = getEl('apache-agent-dir');
+        if (isApache) {
+            apacheAgentDir.placeholder = apachePlatform === 'linux' ? '/opt/appdynamics-php-agent' : 'C:\\Program Files\\AppDynamics\\php-agent';
+        }
+    }
+
+    // --- Data & Generation ---
+    function getFormValues() {
+        const values = {};
+        form.querySelectorAll('input, select').forEach(el => { values[el.id] = el.value.trim(); });
+        values.tech = form.querySelector('input[name="tech"]:checked').value;
+        values.sslEnabled = values.controllerPort === '443';
+        if (values.tech === 'python') {
+            values.pythonMode = form.querySelector('input[name="python-mode"]:checked').value;
+        }
+        return values;
+    }
+
+    function generateArtifacts() {
+        const v = getFormValues();
+        outputsContainer.innerHTML = ''; // Clear previous outputs
+
+        if (v.tech === 'apache') {
+            generateApacheOutputs(v);
+        } else if (v.tech === 'python') {
+            generatePythonOutputs(v);
+        }
+
+        outputsContainer.classList.remove('hidden');
+    }
+
+    function createOutputCard(id, title, content, filename) {
+        const card = document.createElement('div');
+        card.className = 'card output-group';
+        card.innerHTML = `
+            <div class="card-header">
+                <h3 class="card-title" style="margin:0;">${title}</h3>
+                <div class="actions">
+                    <button class="btn" data-copy-id="${id}">Copy</button>
+                    ${filename ? `<button class="btn" data-download-id="${id}" data-filename="${filename}">Download</button>` : ''}
+                </div>
+            </div>
+            <pre id="${id}">${content}</pre>`;
+        outputsContainer.appendChild(card);
+    }
+    
+    // --- Apache Generators ---
+    function generateApacheOutputs(v) {
+        const agentDir = v['apache-agent-dir'];
+        const isWindows = v['apache-platform'] === 'windows';
+        const modulePath = isWindows ? `${agentDir}\\agent\\x64\\mod_appdynamics.so` : `${agentDir}/agent/x64/mod_appdynamics.so`;
+        const logDir = isWindows ? `${agentDir}\\logs` : `${agentDir}/logs`;
+
+        const confContent = `### AppDynamics Agent Configuration for Apache ###
+LoadFile "${modulePath}"
+AppDynamicsControllerHost ${v.controllerHost}
+AppDynamicsControllerPort ${v.controllerPort}
+AppDynamicsControllerSSL ${v.sslEnabled ? 'On' : 'Off'}
+AppDynamicsAccountName ${v.accountName}
+AppDynamicsAccessKey "${v.accessKey}"
+AppDynamicsAgentLogDir "${logDir}"
+# The agent will automatically name the tier after the Apache virtual host.
+# You can override it with: AppDynamicsTierName YourTierName
+`;
+        const loadModuleContent = `# Add this line to your main httpd.conf file
+IncludeOptional conf.d/mod_appdynamics.conf`;
+        
+        createOutputCard('out-apache-conf', 'mod_appdynamics.conf', escapeHtml(confContent), 'mod_appdynamics.conf');
+        createOutputCard('out-apache-load', 'httpd.conf entry', escapeHtml(loadModuleContent));
+    }
+
+    // --- Python Generators ---
+    function generatePythonOutputs(v) {
+        if (v.pythonMode === 'standard') {
+            const envContent = `# AppDynamics Python Agent Environment\n` +
+                `export APPD_CONTROLLER_HOST_NAME='${v.controllerHost}'\n` +
+                `export APPD_CONTROLLER_PORT='${v.controllerPort}'\n` +
+                `export APPD_CONTROLLER_SSL_ENABLED='${v.sslEnabled}'\n` +
+                `export APPD_AGENT_ACCOUNT_NAME='${v.accountName}'\n` +
+                `export APPD_AGENT_ACCOUNT_ACCESS_KEY='${v.accessKey}'\n` +
+                `export APPD_AGENT_APPLICATION_NAME='${v['py-appName']}'\n` +
+                `export APPD_AGENT_TIER_NAME='${v['py-tierName']}'\n` +
+                `export APPD_AGENT_NODE_NAME='${v['py-nodeName']}'\n`;
+
+            const cmdContent = `# Wrap your application's start command with 'pyagent run -- '\npyagent run -- python my_app.py`;
+            createOutputCard('out-py-env', 'Environment Script (appd_env.sh)', escapeHtml(envContent), 'appd_env.sh');
+            createOutputCard('out-py-cmd', 'Startup Command', escapeHtml(cmdContent));
+
+        } else { // Kubernetes
+            const k8sContent = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${v['py-k8s-deployment']}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: ${v['py-k8s-deployment']} }
+  template:
+    metadata:
+      labels: { app: ${v['py-k8s-deployment']} }
+    spec:
+      containers:
+      - name: ${v['py-k8s-deployment']}
+        image: ${v['py-k8s-image']}
+        env:
+        - { name: APPD_CONTROLLER_HOST_NAME, value: "${v.controllerHost}" }
+        - { name: APPD_CONTROLLER_PORT, value: "${v.controllerPort}" }
+        - { name: APPD_CONTROLLER_SSL_ENABLED, value: "${v.sslEnabled}" }
+        - { name: APPD_AGENT_ACCOUNT_NAME, value: "${v.accountName}" }
+        - { name: APPD_AGENT_ACCOUNT_ACCESS_KEY, value: "${v.accessKey}" }
+        - { name: APPD_AGENT_APPLICATION_NAME, value: "${v['py-appName']}" }
+        - { name: APPD_AGENT_TIER_NAME, value: "${v['py-tierName']}" }
+        - name: APPD_AGENT_NODE_NAME
+          valueFrom: { fieldRef: { fieldPath: metadata.name } }
+        command: ["pyagent", "run", "--"]
+        args: ["/bin/sh", "-c", "${v['py-k8s-command']}"]
+`;
+            createOutputCard('out-py-k8s', 'Kubernetes Manifest (deployment.yaml)', escapeHtml(k8sContent), 'deployment.yaml');
+        }
+    }
+
+    // --- Helpers & Event Handlers ---
+    function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    
+    function loadSampleData() {
+        const tech = form.querySelector('input[name="tech"]:checked').value;
+        const common = { controllerHost: 'my-controller.saas.appdynamics.com', controllerPort: '443', accountName: 'customer1', accessKey: 'your-secret-key' };
+        const apache = { 'apache-agent-dir': getEl('apache-platform').value === 'linux' ? '/opt/appdynamics-php-agent' : 'C:\\AppD' };
+        const python = { 'py-appName': 'User-Service', 'py-tierName': 'Auth-API', 'py-nodeName': 'auth-node-1', 'py-k8s-deployment': 'user-auth', 'py-k8s-image': 'my-repo/user-service:latest', 'py-k8s-command': 'gunicorn -w 4 -b :8080 app:main'};
+        const data = tech === 'apache' ? { ...common, ...apache } : { ...common, ...python };
+        for (const [id, val] of Object.entries(data)) { if (getEl(id)) getEl(id).value = val; }
+    }
+    
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    outputsContainer.addEventListener('click', (e) => {
+        const target = e.target;
+        if (target.dataset.copyId) {
+            const content = getEl(target.dataset.copyId).textContent;
+            navigator.clipboard.writeText(content).then(() => showToast('Copied!'), () => showToast('Copy failed.'));
+        }
+        if (target.dataset.downloadId) {
+            const content = getEl(target.dataset.downloadId).textContent;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = target.dataset.filename;
+            a.click();
+        }
+    });
+
+    // --- Initializers ---
+    form.addEventListener('change', updateFormUI);
+    getEl('btnGenerate').addEventListener('click', generateArtifacts);
+    getEl('btnSample').addEventListener('click', loadSampleData);
+    setupTabs();
+    setupRadioGroups();
+    updateFormUI(); // Initial run
+});
+</script>
+
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

@@ -1,0 +1,537 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppDynamics Node.js Agent Generator (Standard/Kubernetes)</title>
+    <style>
+        :root {
+            --bg: #f7f8fa; --card: #ffffff; --text: #0f172a; --muted: #525f75;
+            --border: #e2e8f0; --accent: #4f46e5; --accent-dark: #4338ca;
+            --code-bg: #f8fafc; --kbd-bg: #f3f4f6; --success: #059669; --danger: #dc2626;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        header { background-color: var(--card); border-bottom: 1px solid var(--border); padding: 1.5rem 1rem; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+        h1 { font-size: 1.75rem; margin: 0 0 0.25rem 0; }
+        .subtitle { color: var(--muted); margin: 0; font-size: 1rem; }
+        main { padding: 1.5rem 0; }
+        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab { padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; color: var(--muted); font-size: 1rem; border-bottom: 3px solid transparent; transform: translateY(1px); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin: 0; }
+        .card-body { padding: 1.5rem; }
+        .grid { display: grid; gap: 1.25rem; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--muted); margin-bottom: 0.5rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background-color: #fff; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        .form-control:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .radio-group label { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer; }
+        .radio-group input[type="radio"] { accent-color: var(--accent); width: 1.2em; height: 1.2em; }
+        .radio-group label.selected { border-color: var(--accent); background-color: #f0f0ff; }
+        .btn { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; background-color: #fff; color: var(--text); }
+        .btn-primary { background-color: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover { background-color: var(--accent-dark); border-color: var(--accent-dark); }
+        .actions { display: flex; gap: 0.5rem; align-items: center; }
+        pre { background-color: var(--code-bg); padding: 1rem; border-radius: 0 0 0.75rem 0.75rem; margin: 0; white-space: pre-wrap; word-break: break-all; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; }
+        .kbd { background-color: var(--kbd-bg); border: 1px solid var(--border); padding: 0.2rem 0.4rem; border-radius: 0.3rem; font-size: 0.8rem; }
+        .note { font-size: 0.9rem; color: var(--muted); padding: 1rem; background-color: var(--bg); border-radius: 0.5rem; margin-top: 1rem; }
+        .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 0.75rem 1.5rem; border-radius: 99px; font-size: 0.9rem; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+        .toast.show { opacity: 1; }
+        h2, h3 { margin-top: 2rem; margin-bottom: 1rem; font-weight: 600; }
+        h3 { font-size: 1.25rem; }
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>AppDynamics Node.js Agent Generator</h1>
+            <p class="subtitle">For Standard (VM/Bare Metal) and Kubernetes deployments.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="generator">Generator</button>
+            <button class="tab" data-tab="guide">Guide</button>
+            <button class="tab" data-tab="references">References</button>
+        </div>
+
+        <!-- Generator Panel -->
+        <div id="panel-generator" class="panel active">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title" style="margin:0;">Configuration</h2></div>
+                <div class="card-body">
+                    <form id="generator-form">
+                        <h3>1. Select Deployment Mode</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group radio-group">
+                                <label for="mode-standard"><input type="radio" id="mode-standard" name="mode" value="standard" checked>Standard (VM, Bare Metal)</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label for="mode-k8s"><input type="radio" id="mode-k8s" name="mode" value="kubernetes">Kubernetes</label>
+                            </div>
+                        </div>
+
+                        <div id="standard-options-group">
+                            <h3>2. Select Output Format (Standard Mode)</h3>
+                            <div class="grid grid-cols-2">
+                                <div class="form-group radio-group">
+                                    <label for="output-js"><input type="radio" id="output-js" name="outputFormat" value="js" checked>Require File (appdynamics.js)</label>
+                                </div>
+                                <div class="form-group radio-group">
+                                    <label for="output-env"><input type="radio" id="output-env" name="outputFormat" value="env">Environment Variables Script</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3>3. Configure Agent Properties</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group">
+                                <label for="controllerHost">Controller Host</label>
+                                <input type="text" id="controllerHost" class="form-control" placeholder="my-controller.saas.appdynamics.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="controllerPort">Controller Port</label>
+                                <input type="number" id="controllerPort" class="form-control" value="443">
+                            </div>
+                             <div class="form-group">
+                                <label for="accountName">Account Name</label>
+                                <input type="text" id="accountName" class="form-control" placeholder="customer1">
+                            </div>
+                            <div class="form-group">
+                                <label for="accessKey">Access Key</label>
+                                <input type="password" id="accessKey" class="form-control" placeholder="••••••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="appName">Application Name</label>
+                                <input type="text" id="appName" class="form-control" placeholder="My-NodeJS-App">
+                            </div>
+                            <div class="form-group">
+                                <label for="tierName">Tier Name</label>
+                                <input type="text" id="tierName" class="form-control" placeholder="App-Tier-1">
+                            </div>
+                             <div class="form-group">
+                                <label for="nodeName">Node Name</label>
+                                <input type="text" id="nodeName" class="form-control" placeholder="App-Node-1">
+                            </div>
+                            <div class="form-group">
+                                <label for="sslEnabled">Use SSL (HTTPS)</label>
+                                <select id="sslEnabled" class="form-control"><option value="true" selected>Yes</option><option value="false">No</option></select>
+                            </div>
+                        </div>
+                        
+                        <div id="k8s-options-group" class="hidden">
+                            <h3>Kubernetes Specifics</h3>
+                            <div class="grid grid-cols-3">
+                                <div class="form-group">
+                                    <label for="k8s-deployment-name">Deployment Name</label>
+                                    <input type="text" id="k8s-deployment-name" class="form-control" placeholder="my-node-app">
+                                </div>
+                                <div class="form-group">
+                                    <label for="k8s-image-name">Container Image</label>
+                                    <input type="text" id="k8s-image-name" class="form-control" placeholder="node:18-alpine">
+                                </div>
+                                <div class="form-group">
+                                    <label for="k8s-container-port">Container Port</label>
+                                    <input type="number" id="k8s-container-port" class="form-control" value="3000">
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            <div class="actions" style="margin-bottom: 1.5rem;">
+                <button id="btnGenerate" class="btn btn-primary">Generate Output</button>
+                <button id="btnSample" class="btn">Load Sample Data</button>
+            </div>
+
+            <div id="output-card" class="card hidden">
+                <div class="card-header">
+                    <h3 id="output-title" class="card-title" style="margin:0;">Generated Output</h3>
+                    <div class="actions">
+                        <button class="btn" id="btnCopy">Copy</button>
+                        <button class="btn" id="btnDownload">Download</button>
+                    </div>
+                </div>
+                <pre id="output-content"></pre>
+            </div>
+        </div>
+
+        <!-- Guide Panel -->
+        <div id="panel-guide" class="panel">
+            <div class="card"><div class="card-body">
+                <h2>How to Use This Generator</h2>
+                <p>This tool helps you configure the AppDynamics Node.js agent for either a standard server environment or for Kubernetes.</p>
+
+                <h3>Mode 1: Standard (VM / Bare Metal)</h3>
+                <p>This mode is for applications running directly on a Linux or Windows server.</p>
+                <ol>
+                    <li>Install the agent package: <code class="kbd">npm install appdynamics</code></li>
+                    <li>Select the **Standard** deployment mode.</li>
+                    <li>Choose your desired **Output Format**:
+                        <ul>
+                            <li><strong>Require File (appdynamics.js):</strong> This is the recommended method. It creates a file with all configuration that you require at the very top of your application's main entry point.</li>
+                            <li><strong>Environment Variables:</strong> This method is useful for environments that prefer configuration via environment variables (e.g., PaaS platforms, Docker).</li>
+                        </ul>
+                    </li>
+                    <li>Fill in your configuration details and click **Generate Output**.</li>
+                    <li><strong>If you chose "Require File":</strong>
+                        <p>Save the generated code as `appdynamics.js` in your project root. Then, add this line as the <strong>very first line</strong> of your application's main file (e.g., `server.js`, `index.js`):</p>
+                        <pre>require("./appdynamics.js");</pre>
+                    </li>
+                    <li><strong>If you chose "Environment Variables":</strong>
+                        <p>Save the generated script. Before starting your application, run the script to set the environment variables (e.g., <code class="kbd">source ./appd-env.sh</code>). Then, add this line as the <strong>very first line</strong> of your app's main file:</p>
+                        <pre>require("appdynamics");</pre>
+                    </li>
+                    <li>Restart your application.</li>
+                </ol>
+
+                <h3>Mode 2: Kubernetes</h3>
+                <p>This mode generates a Kubernetes manifest that injects the agent configuration via environment variables. This is the standard practice for containerized environments.</p>
+                 <ol>
+                    <li>Add the agent to your `package.json` (<code class="kbd">npm install appdynamics</code>) and ensure it's part of your Docker image.</li>
+                    <li>In your application's main entry file, add this as the <strong>very first line</strong>:
+                        <pre>require("appdynamics");</pre>
+                        <p class="note">The agent will automatically pick up its configuration from the environment variables set by the Kubernetes manifest.</p>
+                    </li>
+                    <li>Select the **Kubernetes** deployment mode in the generator.</li>
+                    <li>Fill in all agent and Kubernetes-specific details.</li>
+                    <li>Click **Generate Output**.</li>
+                    <li>Save the generated YAML as a file (e.g., `deployment.yaml`).</li>
+                    <li>Apply it to your cluster: <code class="kbd">kubectl apply -f deployment.yaml</code></li>
+                </ol>
+            </div></div>
+        </div>
+
+        <!-- References Panel -->
+        <div id="panel-references" class="panel">
+            <div class="card"><div class="card-body">
+                <h2>Key Concepts & Documentation</h2>
+                
+                <h3>`require("appdynamics")`</h3>
+                <p>For the Node.js agent to work, it must be the **first module required** by your application. This allows it to patch other modules (like Express, http, pg, etc.) before they are loaded. If you require it after other modules, it will not be able to instrument them.</p>
+
+                <h3>Configuration Methods</h3>
+                <ul>
+                    <li><strong>Require File (Code):</strong> Passing a configuration object to `appdynamics.profile()` is clean, explicit, and allows for version control of your monitoring configuration.</li>
+                    <li><strong>Environment Variables:</strong> Node.js agent configuration properties can be specified as environment variables. The variable name is `APPD_` followed by the property name in uppercase (e.g., `controllerHost` becomes `APPD_CONTROLLER_HOST`). This is the standard for containerized and 12-factor apps.</li>
+                </ul>
+
+                <h3>Node Name in Kubernetes</h3>
+                <p>In the generated Kubernetes manifest, the `tierName` and `nodeName` are composed using the Downward API to ensure uniqueness and logical grouping.
+                <br>
+                - `APPD_AGENT_TIER_NAME` is set to the value you provide.
+                <br>
+                - `APPD_AGENT_NODE_NAME` is set to `tierName-$(metadata.name)`, where `$(metadata.name)` is the pod's unique name. This gives you a unique node for each pod, prefixed by its tier.</p>
+
+                <h3>Official Documentation</h3>
+                <ul>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/node-js-agent/install-the-node-js-agent" target="_blank" rel="noopener noreferrer">Install the Node.js Agent</a></li>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/node-js-agent/configure-the-node-js-agent" target="_blank" rel="noopener noreferrer">Node.js Agent Configuration</a></li>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/container-and-orchestration-options/instrument-a-node-js-application-in-a-container" target="_blank" rel="noopener noreferrer">Instrument Node.js in a Container</a></li>
+                </ul>
+            </div></div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- DOM Element References ---
+    const getEl = id => document.getElementById(id);
+    const form = getEl('generator-form');
+    const outputCard = getEl('output-card');
+    const outputContent = getEl('output-content');
+    const outputTitle = getEl('output-title');
+    const toast = getEl('toast');
+    
+    // Groups for conditional UI
+    const standardOptionsGroup = getEl('standard-options-group');
+    const k8sOptionsGroup = getEl('k8s-options-group');
+
+    // --- UI Interaction ---
+    function setupTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        const panels = document.querySelectorAll('.panel');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                getEl(`panel-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+    }
+
+    function setupRadioGroups() {
+        document.querySelectorAll('.radio-group').forEach(group => {
+            const labels = group.querySelectorAll('label');
+            const radios = group.querySelectorAll('input[type="radio"]');
+            function updateSelection() {
+                labels.forEach(label => label.classList.remove('selected'));
+                radios.forEach(radio => {
+                    if (radio.checked) radio.parentElement.classList.add('selected');
+                });
+            }
+            radios.forEach(radio => radio.addEventListener('change', updateSelection));
+            updateSelection(); 
+        });
+    }
+    
+    function updateFormUI() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        standardOptionsGroup.classList.toggle('hidden', mode !== 'standard');
+        k8sOptionsGroup.classList.toggle('hidden', mode !== 'kubernetes');
+    }
+
+    // --- Button Event Listeners ---
+    getEl('btnGenerate').addEventListener('click', generateOutput);
+    getEl('btnSample').addEventListener('click', loadSampleData);
+    getEl('btnCopy').addEventListener('click', () => copyToClipboard(outputContent.textContent));
+    getEl('btnDownload').addEventListener('click', downloadFile);
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+        radio.addEventListener('change', updateFormUI);
+    });
+    // Also attach to all radio buttons to re-style on any change
+    document.querySelectorAll('input[type="radio"]').forEach(radio => radio.addEventListener('change', setupRadioGroups));
+
+    // --- Core Logic ---
+    function getFormValues() {
+        const values = {};
+        const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="password"], select');
+        inputs.forEach(input => values[input.id] = input.value.trim());
+        
+        values.mode = form.querySelector('input[name="mode"]:checked').value;
+        if (values.mode === 'standard') {
+            values.outputFormat = form.querySelector('input[name="outputFormat"]:checked').value;
+        }
+        
+        return values;
+    }
+
+    function generateOutput() {
+        const v = getFormValues();
+        let content, title, filename;
+
+        if (v.mode === 'kubernetes') {
+            content = generateK8s(v);
+            title = 'Generated Kubernetes Manifest';
+            filename = 'deployment.yaml';
+        } else { // Standard mode
+            if (v.outputFormat === 'js') {
+                content = generateJs(v);
+                title = 'Generated Require File (appdynamics.js)';
+                filename = 'appdynamics.js';
+            } else { // env
+                content = generateEnvScript(v);
+                title = 'Generated Environment Variables Script';
+                filename = 'appd-env.sh';
+            }
+        }
+
+        outputContent.textContent = content;
+        outputTitle.textContent = title;
+        outputCard.dataset.filename = filename;
+        outputCard.classList.remove('hidden');
+    }
+    
+    function generateJs(v) {
+        return `
+/**
+ * AppDynamics Node.js Agent Configuration
+ *
+ * This file should be required at the very top of your application's main
+ * entry point. For example: require("./appdynamics.js");
+ *
+ * For more details, see: https://docs.appdynamics.com/appd/23.x/latest/en/application-monitoring/install-app-server-agents/node-js-agent/configure-the-node-js-agent
+ */
+require("appdynamics").profile({
+    controllerHostName: '${v.controllerHost}',
+    controllerPort: ${v.controllerPort},
+    controllerSslEnabled: ${v.sslEnabled === 'true'},
+
+    accountName: '${v.accountName}',
+    accountAccessKey: '${v.accessKey}', // Use environment variable for production
+
+    applicationName: '${v.appName}',
+    tierName: '${v.tierName}',
+    nodeName: '${v.nodeName}',
+    
+    // To see more options, visit the official documentation
+});
+`.trim();
+    }
+
+    function generateEnvScript(v) {
+        return `
+# Source this file before starting your Node.js application
+# Example: source ./appd-env.sh
+#
+# Then, ensure your app starts with: require("appdynamics");
+
+export APPD_CONTROLLER_HOST_NAME='${v.controllerHost}'
+export APPD_CONTROLLER_PORT='${v.controllerPort}'
+export APPD_CONTROLLER_SSL_ENABLED='${v.sslEnabled === 'true'}'
+
+export APPD_AGENT_ACCOUNT_NAME='${v.accountName}'
+export APPD_AGENT_ACCOUNT_ACCESS_KEY='${v.accessKey}'
+
+export APPD_AGENT_APPLICATION_NAME='${v.appName}'
+export APPD_AGENT_TIER_NAME='${v.tierName}'
+export APPD_AGENT_NODE_NAME='${v.nodeName}'
+
+echo "AppDynamics environment variables set."
+`.trim();
+    }
+    
+    function generateK8s(v) {
+        return `
+# This manifest defines a Kubernetes Deployment for your Node.js application,
+# with AppDynamics configuration injected as environment variables.
+#
+# IMPORTANT:
+# 1. Your Docker image must have the 'appdynamics' package installed.
+# 2. Your application's main entry point must start with: require("appdynamics");
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${v['k8s-deployment-name']}
+  labels:
+    app: ${v['k8s-deployment-name']}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${v['k8s-deployment-name']}
+  template:
+    metadata:
+      labels:
+        app: ${v['k8s-deployment-name']}
+    spec:
+      containers:
+      - name: ${v['k8s-deployment-name']}
+        image: ${v['k8s-image-name']}
+        ports:
+        - containerPort: ${parseInt(v['k8s-container-port'], 10)}
+        env:
+        # --- AppDynamics Agent Configuration ---
+        - name: APPD_CONTROLLER_HOST_NAME
+          value: "${v.controllerHost}"
+        - name: APPD_CONTROLLER_PORT
+          value: "${v.controllerPort}"
+        - name: APPD_CONTROLLER_SSL_ENABLED
+          value: "${v.sslEnabled === 'true'}"
+        
+        - name: APPD_AGENT_ACCOUNT_NAME
+          value: "${v.accountName}"
+        - name: APPD_AGENT_ACCOUNT_ACCESS_KEY
+          value: "${v.accessKey}"
+
+        - name: APPD_AGENT_APPLICATION_NAME
+          value: "${v.appName}"
+        - name: APPD_AGENT_TIER_NAME
+          value: "${v.tierName}"
+          
+        # Set node name to be <tierName>-<podName> for uniqueness
+        - name: APPD_AGENT_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+          # The agent prepends the tier name to the node name automatically
+          # if node name doesn't already contain it. For clarity, one might use:
+          # value: "${v.tierName}-$(POD_NAME)" and expose POD_NAME via Downward API
+`.trim();
+    }
+
+    // --- Utility Functions ---
+    function loadSampleData() {
+        const fields = {
+            controllerHost: 'my-controller.saas.appdynamics.com',
+            controllerPort: '443',
+            sslEnabled: 'true',
+            accountName: 'customer1',
+            accessKey: 'your-account-access-key-here',
+            appName: 'Order-Processing',
+            tierName: 'Order-Queue-Worker',
+            nodeName: 'Worker-Node-1',
+            'k8s-deployment-name': 'order-worker',
+            'k8s-image-name': 'my-registry/order-worker:1.5.0',
+            'k8s-container-port': '8080'
+        };
+        for (const [id, value] of Object.entries(fields)) {
+            const el = getEl(id);
+            if (el) el.value = value;
+        }
+    }
+    
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'), () => showToast('Copy failed!'));
+    }
+
+    function downloadFile() {
+        const content = outputContent.textContent;
+        const filename = outputCard.dataset.filename || 'config.txt';
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+    
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // --- Initial Setup ---
+    setupTabs();
+    setupRadioGroups();
+    updateFormUI();
+});
+</script>
+
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

@@ -1,0 +1,541 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppDynamics Machine Agent Generator</title>
+    <style>
+        :root {
+            --bg: #f7f8fa; --card: #ffffff; --text: #0f172a; --muted: #525f75;
+            --border: #e2e8f0; --accent: #4f46e5; --accent-dark: #4338ca;
+            --code-bg: #f8fafc; --kbd-bg: #f3f4f6;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        header { background-color: var(--card); border-bottom: 1px solid var(--border); padding: 1.5rem 1rem; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+        h1 { font-size: 1.75rem; margin: 0 0 0.25rem 0; }
+        .subtitle { color: var(--muted); margin: 0; font-size: 1rem; }
+        main { padding: 1.5rem 0; }
+        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab { padding: 0.75rem 1rem; border: none; background: none; cursor: pointer; color: var(--muted); font-size: 1rem; border-bottom: 3px solid transparent; transform: translateY(1px); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin: 0; }
+        .card-body { padding: 1.5rem; }
+        .grid { display: grid; gap: 1.25rem; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--muted); margin-bottom: 0.5rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background-color: #fff; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        .form-control:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .radio-group label { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer; }
+        .radio-group input[type="radio"] { accent-color: var(--accent); width: 1.2em; height: 1.2em; }
+        .radio-group label.selected { border-color: var(--accent); background-color: #f0f0ff; }
+        .btn { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; background-color: #fff; color: var(--text); }
+        .btn-primary { background-color: var(--accent); color: #fff; border-color: var(--accent); }
+        .actions { display: flex; gap: 0.5rem; align-items: center; }
+        pre { background-color: var(--code-bg); padding: 1rem; border-radius: 0 0 0.75rem 0.75rem; margin: 0; white-space: pre-wrap; word-break: break-all; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; }
+        .kbd { background-color: var(--kbd-bg); border: 1px solid var(--border); padding: 0.2rem 0.4rem; border-radius: 0.3rem; font-size: 0.8rem; }
+        .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 0.75rem 1.5rem; border-radius: 99px; font-size: 0.9rem; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+        .toast.show { opacity: 1; }
+        h2, h3 { margin-top: 2rem; margin-bottom: 1rem; font-weight: 600; }
+        h3 { font-size: 1.25rem; }
+        .hidden { display: none; }
+        .output-group { margin-bottom: 1.5rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>AppDynamics Machine Agent Generator</h1>
+            <p class="subtitle">For Linux (systemd), Windows Services, and Docker.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="generator">Generator</button>
+            <button class="tab" data-tab="guide">Guide</button>
+            <button class="tab" data-tab="references">References</button>
+        </div>
+
+        <div id="panel-generator" class="panel active">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title" style="margin:0;">Configuration</h2></div>
+                <div class="card-body">
+                    <form id="generator-form">
+                        <h3>1. Select Target Platform</h3>
+                        <div class="grid grid-cols-3">
+                            <div class="form-group radio-group">
+                                <label for="platform-linux"><input type="radio" id="platform-linux" name="platform" value="linux" checked>Linux (systemd)</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label for="platform-windows"><input type="radio" id="platform-windows" name="platform" value="windows">Windows Service</label>
+                            </div>
+                            <div class="form-group radio-group">
+                                <label for="platform-docker"><input type="radio" id="platform-docker" name="platform" value="docker">Docker</label>
+                            </div>
+                        </div>
+
+                        <h3>2. Configure Agent Properties</h3>
+                        <div class="grid grid-cols-2">
+                            <div>
+                                <div class="form-group">
+                                    <label for="controllerHost">Controller Host</label>
+                                    <input type="text" id="controllerHost" class="form-control" placeholder="my-controller.saas.appdynamics.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="controllerPort">Controller Port</label>
+                                    <input type="number" id="controllerPort" class="form-control" value="443">
+                                </div>
+                            </div>
+                             <div>
+                                <div class="form-group">
+                                    <label for="accountName">Account Name</label>
+                                    <input type="text" id="accountName" class="form-control" placeholder="customer1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="accessKey">Access Key</label>
+                                    <input type="password" id="accessKey" class="form-control" placeholder="••••••••••••">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3">
+                             <div class="form-group">
+                                <label for="appName">Application Name (Optional)</label>
+                                <input type="text" id="appName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="tierName">Tier Name (Optional)</label>
+                                <input type="text" id="tierName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="nodeName">Node Name (Optional)</label>
+                                <input type="text" id="nodeName" class="form-control">
+                            </div>
+                        </div>
+
+                        <div id="platform-specific-options">
+                            <h3>3. Platform-Specific Settings</h3>
+                            <div class="grid grid-cols-2">
+                                <div id="install-dir-group" class="form-group">
+                                    <label for="installDir">Machine Agent Install Directory</label>
+                                    <input type="text" id="installDir" class="form-control" placeholder="/opt/appdynamics/machine-agent">
+                                </div>
+                                <div id="java-path-group" class="form-group">
+                                    <label for="javaPath">Path to Java Executable (Optional)</label>
+                                    <input type="text" id="javaPath" class="form-control" placeholder="e.g., /usr/lib/jvm/java-11/bin/java">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="actions" style="margin-bottom: 1.5rem;">
+                <button id="btnGenerate" class="btn btn-primary">Generate Artifacts</button>
+                <button id="btnSample" class="btn">Load Sample Data</button>
+            </div>
+
+            <div id="outputs-container" class="hidden">
+                <!-- Linux Outputs -->
+                <div id="output-linux" class="hidden">
+                    <div class="card output-group">
+                        <div class="card-header"><h3 class="card-title" style="margin:0;">machine-agent.service</h3><div class="actions"><button class="btn" data-copy="linux-service">Copy</button><button class="btn" data-download="linux-service" data-filename="machine-agent.service">Download</button></div></div>
+                        <pre id="out-linux-service"></pre>
+                    </div>
+                    <div class="card output-group">
+                        <div class="card-header"><h3 class="card-title" style="margin:0;">machine-agent.env</h3><div class="actions"><button class="btn" data-copy="linux-env">Copy</button><button class="btn" data-download="linux-env" data-filename="machine-agent.env">Download</button></div></div>
+                        <pre id="out-linux-env"></pre>
+                    </div>
+                </div>
+                <!-- Windows Outputs -->
+                <div id="output-windows" class="hidden">
+                     <div class="card output-group">
+                        <div class="card-header"><h3 class="card-title" style="margin:0;">install-service.bat</h3><div class="actions"><button class="btn" data-copy="windows-script">Copy</button><button class="btn" data-download="windows-script" data-filename="install-service.bat">Download</button></div></div>
+                        <pre id="out-windows-script"></pre>
+                    </div>
+                </div>
+                <!-- Docker Outputs -->
+                <div id="output-docker" class="hidden">
+                    <div class="card output-group">
+                        <div class="card-header"><h3 class="card-title" style="margin:0;">Dockerfile</h3><div class="actions"><button class="btn" data-copy="docker-dockerfile">Copy</button><button class="btn" data-download="docker-dockerfile" data-filename="Dockerfile">Download</button></div></div>
+                        <pre id="out-docker-dockerfile"></pre>
+                    </div>
+                    <div class="card output-group">
+                        <div class="card-header"><h3 class="card-title" style="margin:0;">docker-compose.yml</h3><div class="actions"><button class="btn" data-copy="docker-compose">Copy</button><button class="btn" data-download="docker-compose" data-filename="docker-compose.yml">Download</button></div></div>
+                        <pre id="out-docker-compose"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-guide" class="panel">
+             <div class="card"><div class="card-body">
+                <h2>How to Use This Generator</h2>
+                <p>Follow the steps for your chosen platform to deploy the Machine Agent.</p>
+
+                <h3>For Linux (systemd)</h3>
+                <ol>
+                    <li>Unzip the Machine Agent bundle to your chosen directory (e.g., `/opt/appdynamics/machine-agent`).</li>
+                    <li>Generate the artifacts and place them on the server:
+                        <ul>
+                            <li>Save the `machine-agent.service` file to `/etc/systemd/system/machine-agent.service`.</li>
+                            <li>Save the `machine-agent.env` file to `/etc/appdynamics/machine-agent.env`. Ensure the directory exists.</li>
+                        </ul>
+                    </li>
+                    <li>Reload the systemd daemon: <code class="kbd">sudo systemctl daemon-reload</code></li>
+                    <li>Enable the service to start on boot: <code class="kbd">sudo systemctl enable machine-agent.service</code></li>
+                    <li>Start the service: <code class="kbd">sudo systemctl start machine-agent.service</code></li>
+                    <li>Check its status: <code class="kbd">sudo systemctl status machine-agent.service</code></li>
+                </ol>
+
+                <h3>For Windows Service</h3>
+                <ol>
+                    <li>Unzip the Machine Agent bundle to your chosen directory (e.g., `C:\AppDynamics\machine-agent`).</li>
+                    <li>Generate the `install-service.bat` script and save it to your agent's installation directory.</li>
+                    <li>Open a Command Prompt **as an Administrator**.</li>
+                    <li>Navigate to the installation directory: <code class="kbd">cd C:\AppDynamics\machine-agent</code></li>
+                    <li>Run the script to install and start the service: <code class="kbd">install-service.bat</code></li>
+                    <li>You can manage the service from the Windows Services console (`services.msc`). The service will be named "AppDynamics Machine Agent".</li>
+                </ol>
+
+                <h3>For Docker</h3>
+                <ol>
+                    <li>Create a new directory for your Docker build context.</li>
+                    <li>Generate and save `Dockerfile` and `docker-compose.yml` into that directory.</li>
+                    <li>(Optional) Download the Machine Agent zip file and place it in the same directory for a faster, more reliable build. If you don't, the Dockerfile will download it automatically.</li>
+                    <li>From that directory, run Docker Compose: <code class="kbd">docker-compose up -d</code></li>
+                    <li>The command will build the image (if needed) and start the Machine Agent container in the background.</li>
+                     <li>Check the logs: <code class="kbd">docker-compose logs -f</code></li>
+                </ol>
+            </div></div>
+        </div>
+
+        <div id="panel-references" class="panel">
+             <div class="card"><div class="card-body">
+                <h2>Key Concepts & Documentation</h2>
+                <h3>Machine Agent vs. App Server Agent</h3>
+                <p>The Machine Agent is a standalone Java program for monitoring the server itself—CPU, memory, disk, and network I/O. It provides infrastructure visibility. An App Server Agent (like the Java or .NET agent) instruments your application code and runs inside your application's process.</p>
+                
+                <h3>Linking to an Application</h3>
+                <p>By specifying the `Application Name`, `Tier Name`, and `Node Name` in the configuration, you can associate the hardware metrics from the Machine Agent directly with a specific application node in the Controller UI. This is highly recommended as it provides context for performance issues. If you leave these blank, the agent will report metrics to the "Infrastructure" section of the Controller without being tied to a specific APM application.</p>
+                
+                <h3>`systemd` Service Files</h3>
+                <p>Using a `.service` file is the standard, modern way to manage daemons on Linux. Separating the configuration into an `EnvironmentFile` (`machine-agent.env`) is a best practice. It prevents secrets like your access key from being world-readable in the process table and makes configuration updates easier.</p>
+
+                <h3>Docker `pid: host`</h3>
+                <p>The generated `docker-compose.yml` includes `pid: host`. This is crucial. It allows the Machine Agent process inside the container to see all the other processes running on the host machine, which is necessary for it to gather complete infrastructure metrics.</p>
+
+                <h3>Official Documentation</h3>
+                <ul>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/infrastructure-visibility/install-the-machine-agent" target="_blank" rel="noopener noreferrer">Install the Machine Agent</a></li>
+                    <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/infrastructure-visibility/machine-agent-configuration" target="_blank" rel="noopener noreferrer">Machine Agent Configuration</a></li>
+                     <li><a href="https://docs.appdynamics.com/appd/23.x/latest/en/infrastructure-visibility/run-the-machine-agent-in-a-container" target="_blank" rel="noopener noreferrer">Run the Machine Agent in a Container</a></li>
+                </ul>
+            </div></div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const getEl = id => document.getElementById(id);
+    const form = getEl('generator-form');
+    const outputsContainer = getEl('outputs-container');
+    const toast = getEl('toast');
+    
+    // UI Groups
+    const platformSpecificGroup = getEl('platform-specific-options');
+    const installDirGroup = getEl('install-dir-group');
+    const javaPathGroup = getEl('java-path-group');
+
+    function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                getEl(`panel-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+    }
+
+    function setupRadioGroups() {
+        document.querySelectorAll('.radio-group').forEach(group => {
+            const labels = group.querySelectorAll('label');
+            const radios = group.querySelectorAll('input[type="radio"]');
+            function updateSelection() {
+                labels.forEach(label => label.classList.remove('selected'));
+                radios.forEach(radio => { if (radio.checked) radio.parentElement.classList.add('selected'); });
+            }
+            radios.forEach(radio => radio.addEventListener('change', updateSelection));
+            updateSelection();
+        });
+    }
+
+    function updateFormUI() {
+        const platform = form.querySelector('input[name="platform"]:checked').value;
+        platformSpecificGroup.classList.toggle('hidden', platform === 'docker');
+        
+        const installDirInput = getEl('installDir');
+        if (platform === 'linux') {
+            installDirInput.placeholder = '/opt/appdynamics/machine-agent';
+        } else if (platform === 'windows') {
+            installDirInput.placeholder = 'C:\\AppDynamics\\machine-agent';
+        }
+    }
+
+    function getFormValues() {
+        const values = {};
+        form.querySelectorAll('input[type="text"], input[type="number"], input[type="password"]').forEach(input => {
+            values[input.id] = input.value.trim();
+        });
+        values.platform = form.querySelector('input[name="platform"]:checked').value;
+        values.sslEnabled = values.controllerPort === '443' || values.controllerPort === '8181';
+        return values;
+    }
+
+    function generateArtifacts() {
+        const v = getFormValues();
+        
+        // Hide all output blocks first
+        document.querySelectorAll('#outputs-container > div').forEach(div => div.classList.add('hidden'));
+
+        if (v.platform === 'linux') {
+            getEl('out-linux-service').textContent = generateLinuxService(v);
+            getEl('out-linux-env').textContent = generateLinuxEnv(v);
+            getEl('output-linux').classList.remove('hidden');
+        } else if (v.platform === 'windows') {
+            getEl('out-windows-script').textContent = generateWindowsScript(v);
+            getEl('output-windows').classList.remove('hidden');
+        } else if (v.platform === 'docker') {
+            getEl('out-docker-dockerfile').textContent = generateDockerDockerfile(v);
+            getEl('out-docker-compose').textContent = generateDockerCompose(v);
+            getEl('output-docker').classList.remove('hidden');
+        }
+
+        outputsContainer.classList.remove('hidden');
+    }
+
+    function generateLinuxService(v) {
+        const javaExec = v.javaPath || `${v.installDir}/jre/bin/java`;
+        return `[Unit]
+Description=AppDynamics Machine Agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+# If you want to run as a non-root user, ensure the user has permissions to the install directory
+# User=appd-user 
+
+# Load configuration from environment file
+EnvironmentFile=/etc/appdynamics/machine-agent.env
+
+ExecStart=${javaExec} $MACHINE_AGENT_JAVA_OPTS -jar ${v.installDir}/machineagent.jar
+
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target`;
+    }
+
+    function generateLinuxEnv(v) {
+        let content = `# Configuration for the AppDynamics Machine Agent service
+# Place this file in /etc/appdynamics/machine-agent.env
+
+# Controller Connection
+MACHINE_AGENT_JAVA_OPTS="-Dappdynamics.controller.hostName=${v.controllerHost}"
+MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Dappdynamics.controller.port=${v.controllerPort}"
+MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Dappdynamics.controller.ssl.enabled=${v.sslEnabled}"
+
+# Account Credentials
+MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Dappdynamics.agent.accountName=${v.accountName}"
+MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Dappdynamics.agent.accountAccessKey=${v.accessKey}"
+`;
+        if (v.appName) content += `MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Dappdynamics.agent.applicationName=${v.appName}"\n`;
+        if (v.tierName) content += `MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Dappdynamics.agent.tierName=${v.tierName}"\n`;
+        if (v.nodeName) content += `MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Dappdynamics.agent.nodeName=${v.nodeName}"\n`;
+
+        content += `\n# Add any other Java options here, e.g., memory settings\n# MACHINE_AGENT_JAVA_OPTS="$MACHINE_AGENT_JAVA_OPTS -Xmx512m"\n`;
+        return content;
+    }
+
+    function generateWindowsScript(v) {
+        return `@echo off
+rem This script installs, configures, and starts the AppDynamics Machine Agent as a Windows Service.
+rem Run it from an Administrator Command Prompt inside the agent installation directory.
+
+set AGENT_DIR=${v.installDir}
+set SERVICE_NAME="AppDynamics Machine Agent"
+
+echo Installing service...
+call "%AGENT_DIR%\\bin\\machine-agent-service.bat" install
+
+echo Configuring service...
+call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-controller-host ${v.controllerHost}
+call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-controller-port ${v.controllerPort}
+call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-controller-ssl-enabled ${v.sslEnabled}
+call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-account-name ${v.accountName}
+call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-account-access-key ${v.accessKey}
+
+${v.appName ? `call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-application-name ${v.appName}` : 'rem No application name specified.'}
+${v.tierName ? `call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-tier-name ${v.tierName}` : 'rem No tier name specified.'}
+${v.nodeName ? `call "%AGENT_DIR%\\bin\\machine-agent-service.bat" set-node-name ${v.nodeName}` : 'rem No node name specified.'}
+
+echo Starting service...
+net start %SERVICE_NAME%
+
+echo.
+echo Service installation and startup complete.
+`;
+    }
+
+    function generateDockerDockerfile(v) {
+        return `# Dockerfile for the AppDynamics Machine Agent
+FROM openjdk:11-jre-slim
+
+# Agent can be downloaded or copied from a local file for faster builds
+ARG AGENT_ZIP=machine-agent.zip
+ARG AGENT_URL=https://download-files.appdynamics.com/download-file/machine-agent-bundle-64bit-linux/latest
+
+WORKDIR /appd
+
+# If machine-agent.zip is not present in the build context, download it
+RUN if [ ! -f "$AGENT_ZIP" ]; then wget -O $AGENT_ZIP $AGENT_URL; fi
+
+RUN unzip $AGENT_ZIP && rm $AGENT_ZIP
+
+# Expose ports for extensions if needed (e.g., for AppD for Databases)
+# EXPOSE 9191
+
+ENTRYPOINT [ "/appd/machine-agent/bin/machine-agent" ]
+`;
+    }
+    
+    function generateDockerCompose(v) {
+        let content = `# docker-compose.yml for the AppDynamics Machine Agent
+version: '3.7'
+
+services:
+  machine-agent:
+    build: .
+    container_name: appd-machine-agent
+    restart: always
+    # pid: host is required for the agent to see processes on the host
+    pid: host
+    environment:
+      - APPDYNAMICS_CONTROLLER_HOST_NAME=${v.controllerHost}
+      - APPDYNAMICS_CONTROLLER_PORT=${v.controllerPort}
+      - APPDYNAMICS_CONTROLLER_SSL_ENABLED=${v.sslEnabled}
+      - APPDYNAMICS_AGENT_ACCOUNT_NAME=${v.accountName}
+      - APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY=${v.accessKey}
+`;
+        if (v.appName) content += `      - APPDYNAMICS_AGENT_APPLICATION_NAME=${v.appName}\n`;
+        if (v.tierName) content += `      - APPDYNAMICS_AGENT_TIER_NAME=${v.tierName}\n`;
+        if (v.nodeName) content += `      - APPDYNAMICS_AGENT_NODE_NAME=${v.nodeName}\n`;
+        content += `      # Set a unique host ID for Docker hosts to prevent name conflicts
+      - APPDYNAMICS_MACHINE_HOST_UNIQUE_ID=\${HOSTNAME}
+`;
+        return content;
+    }
+
+
+    function loadSampleData() {
+        const platform = form.querySelector('input[name="platform"]:checked').value;
+        const fields = {
+            controllerHost: 'my-controller.saas.appdynamics.com',
+            controllerPort: '443',
+            accountName: 'customer1',
+            accessKey: 'your-account-access-key-here',
+            appName: 'E-Commerce-App',
+            tierName: 'Payment-API-Tier',
+            nodeName: 'payment-api-prod-1',
+            installDir: platform === 'windows' ? 'C:\\AppDynamics\\machine-agent' : '/opt/appdynamics/machine-agent',
+            javaPath: ''
+        };
+        for (const [id, value] of Object.entries(fields)) {
+            if(getEl(id)) getEl(id).value = value;
+        }
+    }
+    
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'), () => showToast('Copy failed!'));
+    }
+
+    function downloadFile(e) {
+        const id = e.target.dataset.download;
+        const content = getEl(`out-${id}`).textContent;
+        const filename = e.target.dataset.filename || 'config.txt';
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+    
+    // Initial Setup
+    setupTabs();
+    setupRadioGroups();
+    updateFormUI();
+
+    getEl('btnGenerate').addEventListener('click', generateArtifacts);
+    getEl('btnSample').addEventListener('click', loadSampleData);
+    document.querySelectorAll('input[name="platform"]').forEach(radio => radio.addEventListener('change', updateFormUI));
+    document.querySelectorAll('input[type="radio"]').forEach(radio => radio.addEventListener('change', setupRadioGroups));
+    
+    // Delegated event listener for copy/download buttons
+    outputsContainer.addEventListener('click', (e) => {
+        if (e.target.dataset.copy) {
+            const content = getEl(`out-${e.target.dataset.copy}`).textContent;
+            copyToClipboard(content);
+        }
+        if (e.target.dataset.download) {
+            downloadFile(e);
+        }
+    });
+});
+</script>
+
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
