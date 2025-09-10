@@ -1,0 +1,51 @@
+
+/* validation.css - Shared validation styles for all generators */
+:root {
+    --success: #166534; --success-bg: #f0fdf4; --success-border: #dcfce7;
+    --warning: #b45309; --warning-bg: #fffbeb; --warning-border: #fef3c7;
+    --error: #dc2626; --error-bg: #fef2f2; --error-border: #fecaca;
+    --info: #2563eb; --info-bg: #eff6ff; --info-border: #dbeafe;
+}
+
+.validation-message { 
+    font-size: 0.8rem; 
+    margin-top: 0.25rem; 
+    display: block; 
+}
+.message-success { color: var(--success); }
+.message-warning { color: var(--warning); }
+.message-error { color: var(--error); }
+
+.form-control.error { border-color: var(--error); }
+.form-control.warning { border-color: var(--warning); }
+.form-control.success { border-color: var(--success); }
+
+.validation-summary { 
+    padding: 1rem; 
+    border-radius: 0.5rem; 
+    margin-bottom: 1rem; 
+}
+.summary-success { 
+    background-color: var(--success-bg); 
+    border: 1px solid var(--success-border); 
+    color: var(--success); 
+}
+.summary-warning { 
+    background-color: var(--warning-bg); 
+    border: 1px solid var(--warning-border); 
+    color: var(--warning); 
+}
+.summary-error { 
+    background-color: var(--error-bg); 
+    border: 1px solid var(--error-border); 
+    color: var(--error); 
+}
+
+.validation-result { 
+    padding: 0.5rem; 
+    border-radius: 0.25rem; 
+    margin-bottom: 0.5rem; 
+}
+.validation-success { background-color: var(--success-bg); }
+.validation-warning { background-color: var(--warning-bg); }
+.validation-error { background-color: var(--error-bg); }
